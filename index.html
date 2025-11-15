@@ -12,6 +12,9 @@
 
   <script>
     const sheetUrl = "https://script.google.com/macros/s/AKfycbwvB4YLuZT5fqlNUuIN7JQ36VWOpF6nGqRQccK5SvIevm6Bs-PlYhA5SN1SvZcFOBbU/exec";
+function doGet(e) {
+  return ContentService.createTextOutput("La Web App è attiva e pronta a ricevere dati POST.");
+}
 
     function sendToSheet(book) {
       fetch(sheetUrl, {
@@ -65,4 +68,5 @@
   </script>
 </body>
 </html>
+
 
