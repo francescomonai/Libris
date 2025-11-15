@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scanner ISBN Avanzato</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <h1>Scanner ISBN Avanzato</h1>
+  <div id="reader" style="width:300px;height:300px;"></div>
+  <div id="result"></div>
+  <div id="price"></div>
+
+  <script>
+    const sheetUrl = "https://script.google.com/macros/s/AKfycbyn8jsu3cR5xx_iyhMVYK_0TlAWRoseSN6ZhM9lqIDxG7_PThJE541hDdK5_ina6RLD/exec";
+
+    function sendToSheet(book) {
+      fetch(sheetUrl, {
+        method: "POST",
+        body: JSON.stringify(book),
+        headers: {"Content-Type": "application/json"}
+      })
+      .then(res => res.json())
+      .then(data => console.log(data))
+      .catch(err => console.error(err));
+    }
+
+    async function fetchBookInfo(isbn) {
+      // Google Books
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+      const data = await res.json();
+
+      if (!data.items) {
+        document.getElementById("result").innerText = "Libro non trovato";
+        document.getElementById("price").innerText = "";
+        return;
+      }
+
+      const info = data.items[0].volumeInfo;
+      const book = {
+        isbn: isbn,
+        title: info.title || "N/A",
+        authors: (info.authors || []).join(", "),
+        publisher: info.publisher || "N/A",
+        publishedDate: info.publishedDate || "N/A",
+      };
+
+      document.getElementById("result").innerText = `Trovato: ${book.title} (${book.authors})`;
+
+      // Prezzo stimato (basato su prezzi medi di vendita Google Books o marketplace pubblici)
+      // Qui usiamo come esempio "listPrice" se disponibile
+      const saleInfo = data.items[0].saleInfo;
+      book.price = saleInfo && saleInfo.listPrice ? `${saleInfo.listPrice.amount} ${saleInfo.listPrice.currencyCode}` : "N/A";
+
+      document.getElementById("price").innerText = `Prezzo stimato: ${book.price}`;
+
+      sendToSheet(book);
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      fetchBookInfo(decodedText);
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+  </script>
+</body>
+</html>
